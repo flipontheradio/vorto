@@ -11,7 +11,9 @@ function groupTrips(travelMatrix, tripDetails, allStartDist, allFinishDist, allT
     console.log(average(allTraverseTimes))
     console.log(median(allTraverseTimes.sort()))
 
-    findCloseGroups(travelMatrix, tripDetails, "70")
+    let possibleRoutes = findCloseGroups(travelMatrix, tripDetails, "70")
+
+    let possibleSchedules = buildSchedules(possibleRoutes, tripDetails)
     
     return {routes: "", cost: ""}
 }
@@ -22,17 +24,25 @@ function findCloseGroups(travelMatrix, tripDetails, threshold){
     for(let singleTrip in tripDetails){
         let closeNeighbors = []
 
-        for(let singleRoute in tripDetails[singleTrip]){
-            let matrixCopy = travelMatrix
-                if(travelMatrix[singleRoute][singleTrip] < threshold && travelMatrix[singleRoute][singleTrip] > 0){
-                    matrixCopy[singleRoute][singleTrip] = 0
-                    closeNeighbors.push([Number(singleTrip) + 1, Number(singleRoute) + 1])
-                }
+        for(let singleRoute in tripDetails){
+            if(travelMatrix[singleTrip][singleRoute] < threshold && travelMatrix[singleTrip][singleRoute] > 0){
+                    //add close neighbor, cost of trip, and cost to get back home from neighbor
+                    closeNeighbors.push([Number(singleRoute) + 1, travelMatrix[singleTrip][singleRoute], tripDetails[Number(singleRoute)][5]])
+            }
         }
         possibleRoutes.push(closeNeighbors)
     }
-    
-  return possibleRoutes
+    return possibleRoutes
+}
+
+function buildSchedules(possibleRoutes, tripDetails){
+    let schedules = []
+    for(let startPoint of possibleRoutes){
+        for(let aSched of startPoint){
+            console.log(aSched)
+        }
+    }
+    console.log(tripDetails)
 }
 
 module.exports = { groupTrips };
