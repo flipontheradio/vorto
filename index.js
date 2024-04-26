@@ -1,4 +1,7 @@
 let fs = require("fs");
+const groupTrips = require("./groupTrips");
+const { start } = require("repl");
+
 
 function findDistance(pointA, pointB){
     return Math.sqrt(Math.pow((pointA[0] - pointB[0]), 2) + Math.pow((pointA[1] - pointB[1]),2))
@@ -13,32 +16,46 @@ function parseCoords(coords){
 const file = fs.readFileSync(process.argv[2]).toString('utf-8');;
 const fileByLine = file.split('\n')
 
+let allStartDist = []
+let allFinishDist = []
 let tripDetails = []
 
 //Compute length of trips
 for(let i = 1; i < fileByLine.length; i++){
     if(fileByLine[i] != ''){
         let parsedLine = fileByLine[i].split(' ')
-        let sourceCoord = parseCoords(parsedLine[1])
+        let startCoord = parseCoords(parsedLine[1])
         let destCoord = parseCoords(parsedLine[2])
+        let startDist = findDistance([0,0],startCoord)
+        let finishDist = findDistance(destCoord,[0,0])
 
-        tripDetails.push([parsedLine[0], sourceCoord, destCoord, findDistance(sourceCoord, destCoord)])
+        allStartDist.push(startDist)
+        allFinishDist.push(finishDist)
+
+        tripDetails.push([parsedLine[0], startCoord, destCoord, findDistance(startCoord, destCoord), startDist, finishDist])
     }
 }
 
-let travelMatrix = Array(tripDetails.length + 1).fill().map(()=>Array(tripDetails.length + 1).fill())
+//initialize matrix
+let travelMatrix = Array(tripDetails.length).fill().map(()=>Array(tripDetails.length ).fill())
+
+let allTraverseTimes = []
 
 //Build matrix of length between all trips
 for(let endPoint in tripDetails){
-    const endOfJob = tripDetails[endPoint][0]
+    const endOfJob = tripDetails[endPoint][0] - 1
     for(let startPoint in tripDetails){
-        const startOfJob = tripDetails[startPoint][0]
+        const startOfJob = tripDetails[startPoint][0] - 1 
 
         if(endOfJob != startOfJob){
             const noLoadDistance = findDistance(tripDetails[startPoint][2], tripDetails[endPoint][1])
+
             travelMatrix[startPoint][endPoint] = noLoadDistance
+            allTraverseTimes.push(noLoadDistance)
         } else {
             travelMatrix[endOfJob][startOfJob] = 0
         }
     }
 }
+
+groupTrips.groupTrips(travelMatrix, tripDetails, allStartDist, allFinishDist, allTraverseTimes)
